@@ -178,16 +178,16 @@ collector/
 ┌─────────────────────────────────────────────────────────────┐
 │                      single process                         │
 │                                                             │
-│  ┌──────────────────┐        asyncio event loop            │
-│  │  Camera Thread   │    ┌──────────────────────────────┐  │
-│  │                  │    │                              │  │
-│  │ cv2.VideoCapture │──► │  asyncio.Queue               │  │
-│  │ MotionDetector   │    │       │                      │  │
-│  │ (blocking I/O)   │    │       ▼                      │  │
-│  └──────────────────┘    │  CapturePipeline (coroutine) │  │
-│  thread-safe put via     │  REST server (FastAPI)       │  │
-│  run_coroutine_          │                              │  │
-│  threadsafe()            └──────────────────────────────┘  │
+│  ┌──────────────────┐        asyncio event loop             │
+│  │  Camera Thread   │    ┌──────────────────────────────┐   │
+│  │                  │    │                              │   │
+│  │ cv2.VideoCapture │──► │  asyncio.Queue               │   │
+│  │ MotionDetector   │    │       │                      │   │
+│  │ (blocking I/O)   │    │       ▼                      │   │
+│  └──────────────────┘    │  CapturePipeline (coroutine) │   │
+│  thread-safe put via     │  REST server (FastAPI)       │   │
+│  run_coroutine_          │                              │   │
+│  threadsafe()            └──────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
