@@ -7,6 +7,6 @@ plugins:
 nav:
   - Home: index.md
   - Documentation:
-      - design: docs/design.md
+      - design: design.md
 
 theme: material
