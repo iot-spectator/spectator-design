@@ -1,0 +1,12 @@
+site_name: Spectator Design
+
+plugins:
+  - search
+  - include-markdown
+
+nav:
+  - Home: index.md
+  - Documentation:
+      - design: docs/design.md
+
+theme: material
