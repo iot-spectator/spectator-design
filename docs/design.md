@@ -1,334 +1,178 @@
-# IoT Spectator System — Design Document
+# IoT Spectator — Design
 
-## Overview
-
-IoT Spectator is an intelligent image or video data collector system built for IoT device, like Raspberry Pi. It continuously monitors a connected webcam, captures images or video when motion is detected, and allows users to search captured media using natural language or structured queries — for example, *"when did Amazon deliver my package?"* or *"did anyone pass by around 3 PM?"*
+**Status:** Draft for review. Grounded in the code currently on `main` across `spectator-db`, `spectator-data-collector`, and `iot-health`. Items marked **(Decision)** need sign-off before implementation; the rest follow mechanically.
 
 ---
 
-## Goals and Constraints
+## Goals
 
-**Goals**
-- Run fully self-contained on a single Raspberry Pi with no cloud dependency
-- Capture media only when motion is detected (efficient use of storage and compute)
-- Support natural language queries on the user's laptop over a local network
-- Be extensible: new storage backends, metadata backends, and AI models should be addable without touching core logic
+Provide a simple, self-contained way to capture image/video on commodity IoT hardware (e.g. a Raspberry Pi) and make it queryable by time, by event, and by meaning, with optional AI enrichment.
 
-**Constraints**
-- An edge device may not have public internet access, but may have local (closed) network connection
-- The system must work without any AI: structured queries (by time, labels) always work; AI features are an optional enhancement
-- Designed for Python 3.13+
+Guiding principles:
+
+- **Per-device autonomy.** Each device owns its data and works with no cloud, no network, and no AI model present. AI is an optional enhancement, never a dependency.
+- **Building block over appliance.** `spectator-db` is positioned as a reusable, dependency-light library. Its reason to exist over "files + SQLite" is the *union* neither vector databases nor object stores provide alone: it stores the media file **and** its structured metadata **and** its embedding behind one interface, offline, with no server to run. This deliberately avoids competing with full NVR appliances and instead serves builders who want an embeddable media-intelligence store.
+- **Queryable, not just recorded.** Temporal, event/label, and semantic similarity queries are first-class.
+
+**Non-goals:** a central/multi-device database; a model host (the system stores enrichment, never generates it inside `spectator-db`); a continuous streaming/NVR product; an account or cloud service.
 
 ---
 
-## System Architecture
+## Requirements
+
+System-wide requirements. Component-specific detail lives in the per-component sections below.
+
+**Functional**
+
+- Capture image or short video on motion or on demand, and persist each capture with its metadata.
+- Store, per capture: media type, capture time, format, size, optional duration, device id, labels, description, and an embedding (with the model identity that produced it).
+- Query by composable filters: time range, media type, device id, labels (any-match), with limit/offset, newest-first.
+- Similarity search over embeddings, scoped to a single embedding model.
+- Attach or replace enrichment (labels, description, embedding) *after* the capture is stored.
+- Expose query and control operations to local apps and to an assistant over the LAN (REST and MCP).
+- Report device health.
+
+**Non-functional / constraints**
+
+- Runs on a Raspberry Pi-class device; no GPU required.
+- `spectator-db` has zero required runtime dependencies; optional extras may accelerate features (e.g. vector search).
+- Offline-first: full functionality with no network and no model.
+- A failed or slow enricher must never cause a captured media item to be lost.
+- Data owned on disk must survive library upgrades (schema versioning + forward migration).
+- All datetimes are timezone-aware UTC at the API boundary.
+- A documented concurrency contract for the storage layer.
+
+---
+
+## Architecture
+
+Each device runs one collector and one database, plus the health library. The collector is the active agent; the database is passive local memory; health reports vitals.
+
+![IoT Spectator single-device architecture](architecture.svg)
+
+**Layering and dependency direction.** `spectator-db` depends on nothing else in the org. `spectator-data-collector` depends on both `spectator-db` and `iot-health`. The direction never reverses — the database stays ignorant of cameras, models, networks, and other devices.
 
 ```
-┌─────────────────────────────── Raspberry Pi ────────────────────────────────┐
-│                                                                             │
-│   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │                  spectator-data-collector                           │   │
-│   │                                                                     │   │
-│   │   Camera thread ──► asyncio.Queue ──► CapturePipeline (async)       │   │
-│   │   (motion detect)                         │                         │   │
-│   │                                           ▼                         │   │
-│   │                                     spectator-db  ◄── iot-health    │   │
-│   │                                           │                         │   │
-│   │                               SpectatorService                      │   │
-│   │                             ┌──────┴──────┐                         │   │
-│   │                           REST            MCP                       │   │
-│   └─────────────────────────────┬──────────────┬────────────────────────┘   │
-│                                 │              │                            │
-└────────────────────────────── LAN ──────────────────────────────────────────┘
-                                  │              │
-                         ┌────────▼──────────────▼────────┐
-                         │         User's Laptop          │
-                         │                                │
-                         │   REST client / Claude (MCP)   │
-                         └────────────────────────────────┘
+iot-health  ◄───────────────┐  (vitals)
+                             │
+spectator-db  ◄─── spectator-data-collector
+(library, 0 deps)            (capture · enrich · REST · MCP)
 ```
 
-**Key point:** Claude runs on the user's laptop, not on the Pi. It acts as the natural language query engine by calling the Pi's MCP tools over the LAN.
+**Architectural decisions (confirmed in code).**
+
+- **(Decision, confirmed) `spectator-db` is a pure in-process library**, zero runtime dependencies. The collector imports and calls it directly; there is no DB server or wire protocol.
+- **(Decision, confirmed) The control plane lives in the collector**, not the database. `rest.py` (FastAPI) and `mcp.py` (FastMCP) both delegate to a single `SpectatorService`, so REST and MCP can never diverge in behavior.
+- **No central database.** Devices are autonomous. Central upload (S3) and device-to-device coordination (mesh, leader election) are future, collector-side, and must never leak into `spectator-db`.
+
+### IoT Health
+
+Role: the device's vitals provider. `SpectatorService` calls it for the `device_status` operation surfaced over REST/MCP, and the collector can use it for self-monitoring. It is standalone and has no knowledge of capture or storage.
+
+### Spectator-DB
+
+Role: the device's memory. It receives captures from the collector's pipeline (`store → enrich`), and answers queries for the service layer (`query / get / retrieve / search_similar`). It exposes two backend abstractions — `Storage` (file bytes) and `MetadataStore` (structured records) — orchestrated by the `SpectatorDB` facade. V1 backends are `LocalStorage` and `SQLiteMetadataStore`. It never captures and never runs a model.
+
+### Spectator-Data-Collector
+
+Role: the device's eyes and hands. A camera/motion thread enqueues capture tasks onto an `asyncio.Queue`; the `CapturePipeline` records each task, optionally enriches it, and stores it in `spectator-db`. The same `SpectatorService` that backs storage queries also triggers on-demand captures and reads device health, and is exposed identically over REST and MCP. Cross-device behavior and central upload are out of scope (see that section).
 
 ---
 
-## Deployment Model
+## IoT Health
 
-- Each Pi is **fully self-contained**: one `spectator-data-collector` process, one `spectator-db` instance per device.
-- No central server. A future "central brain" to aggregate multiple edge devices is out of scope for V1.
-- `spectator-db` and `iot-health` are **libraries** consumed internally by the collector — they are not separate services or processes.
+**Responsibilities.** Report platform, CPU architecture, OS, processors, memory, disk capacity, temperature, and cameras through a single `summary()`. Auto-detect the device class (Raspberry Pi vs. generic Linux/Jetson) behind a `BaseHealth` ABC.
 
----
-
-## Components
-
-### iot-health
-
-A library for reading device statistics: CPU usage, memory, disk capacity, temperature, and connected cameras. Used by the collector's `SpectatorService` to serve the `/health` endpoint.
+**Status & notes.** This is the most mature repo and works today. It uses an older style (classmethods, `Optional[...]`, 2020-era conventions). Treat modernization as opportunistic and low priority; no changes are required for the rest of the system to proceed.
 
 ---
 
-### spectator-db
+## Spectator-DB
 
-An independent, standalone library. Its single responsibility is storing and retrieving media files with their metadata. It has no opinion on how media was captured or what is in it.
+The foundation, and where most open decisions live. Today the structure is in place — `Storage`/`MetadataStore` ABCs, a `MediaRecord` model, and a `SpectatorDB` facade with `insert / get / delete / retrieve / query / search_similar`. The decisions below close the gap between that structure and a stable, genuinely reusable 0.1.
 
-> *Unix principle: do one thing, do it well.*
-
-#### Data Model — `MediaRecord`
-
-| Field | Type | Description |
-|---|---|---|
-| `id` | `str` | UUID, auto-generated on insert |
-| `media_type` | `IMAGE \| VIDEO` | Type of media |
-| `captured_at` | `datetime` | When captured — provided by the caller |
-| `inserted_at` | `datetime` | When stored — set automatically |
-| `duration` | `float \| None` | Duration in seconds; video only |
-| `format` | `str` | File extension, e.g. `jpg`, `avi` — derived from file |
-| `size` | `int` | File size in bytes — derived from file |
-| `device_id` | `str \| None` | Which device captured it |
-| `labels` | `list[str]` | Semantic labels, e.g. `["person", "car"]` — caller provides |
-| `description` | `str \| None` | Text summary — caller provides |
-| `embedding` | `list[float] \| None` | Vector embedding for semantic search — caller provides |
-
-**spectator-db never generates labels, descriptions, or embeddings.** It only stores and indexes them.
-
-#### API Surface
+### Data model
 
 ```python
-# Write
-db.insert(file, media_type, captured_at, *, duration, device_id, labels, description, embedding) -> str
-db.delete(id) -> None
-db.retrieve(id, dest) -> None   # copies file to destination path
-
-# Read
-db.get(id) -> MediaRecord
-db.query(*, start, end, media_type, device_id, labels, limit, offset) -> list[MediaRecord]
-db.search_similar(embedding, *, limit, threshold) -> list[MediaRecord]
-```
-
-- `labels` in `query()` uses **ANY-match** semantics (at least one label matches)
-- `search_similar` is separate from `query`; hybrid search is a future enhancement
-- All `query` parameters are optional and composable
-
-#### Backend Abstractions
-
-Two ABCs decouple the interface from the implementation:
-
-```
-Storage (ABC)                   MetadataStore (ABC)
-  save(file, mode, name)          insert(record) -> str
-  retrieve(name, dest)            get(id) -> MediaRecord
-  delete(name)                    delete(id) -> None
-  list_all() -> list[Path]        query(...) -> list[MediaRecord]
-                                  search_similar(...) -> list[MediaRecord]
-```
-
-**V1 implementations:**
-- `LocalStorage` — filesystem-backed file storage
-- `SQLiteMetadataStore` — SQLite for structured queries; `sqlite-vec` (optional dep) for vector similarity search
-
-**Future:** `S3Storage`, `PostgresMetadataStore` — just new implementations of the same interfaces, no core changes required.
-
-**Rationale for the split:** File storage and metadata storage evolve independently. A Pi deployment uses local filesystem + SQLite. A future cloud deployment might use S3 + Postgres. The `SpectatorDB` facade is unchanged either way.
-
-#### Construction
-
-```python
-storage = LocalStorage(path=Path("./media"))
-metadata_store = SQLiteMetadataStore(db_path=Path("./spectator.db"))
-db = SpectatorDB(storage, metadata_store)
-```
-
----
-
-### spectator-data-collector
-
-The main server process running on each Pi. It owns the full capture lifecycle and exposes a query interface to the outside world.
-
-#### Package Structure
-
-```
-collector/
-│
-├── config.py          # CollectorConfig, CaptureConfig, MotionConfig (+ TOML loader)
-├── collector.py       # SpectatorDataCollector — top-level, wires everything
-│
-├── camera/
-│   ├── monitor.py     # CameraMonitor — background thread, motion detection,
-│   │                  #   enqueues CaptureTask on asyncio.Queue
-│   └── motion.py      # MotionDetector — OpenCV MOG2 background subtraction
-│
-├── capture/
-│   ├── task.py        # CaptureTask dataclass
-│   ├── pipeline.py    # CapturePipeline — async queue consumer
-│   └── recorder.py    # ImageRecorder, VideoRecorder
-│
-├── enrichment/
-│   ├── base.py        # Enricher ABC + EnrichmentResult
-│   └── local.py       # LocalEnricher (on-Pi model — stub, future)
-│
-├── service.py         # SpectatorService — shared business logic
-├── rest.py            # FastAPI app + all routes
-└── mcp.py             # MCP server (future)
-```
-
-#### Concurrency Model
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      single process                         │
-│                                                             │
-│  ┌──────────────────┐        asyncio event loop             │
-│  │  Camera Thread   │    ┌──────────────────────────────┐   │
-│  │                  │    │                              │   │
-│  │ cv2.VideoCapture │──► │  asyncio.Queue               │   │
-│  │ MotionDetector   │    │       │                      │   │
-│  │ (blocking I/O)   │    │       ▼                      │   │
-│  └──────────────────┘    │  CapturePipeline (coroutine) │   │
-│  thread-safe put via     │  REST server (FastAPI)       │   │
-│  run_coroutine_          │                              │   │
-│  threadsafe()            └──────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-```
-
-- The **camera thread** runs a blocking OpenCV frame-read loop. When motion is detected, it puts a `CaptureTask` on the async queue using `asyncio.run_coroutine_threadsafe()`.
-- The **capture pipeline** runs as an asyncio task. It pulls tasks from the queue and processes them in a thread executor (to avoid blocking the event loop with file I/O).
-- The **REST server** (uvicorn/FastAPI) runs in the same event loop. The FastAPI lifespan hook starts the camera thread and pipeline task, and tears them down on shutdown.
-
-#### Capture Flow
-
-```
-Camera thread reads frame
-        │
-        ▼
-MotionDetector.detect(frame)
-        │
-   motion? ──No──► continue reading
-        │
-       Yes
-        │
-        ▼
-CameraMonitor builds CaptureTask
-  IMAGE mode: [trigger_frame]
-  VIDEO mode: collect frames for video_duration seconds
-        │
-        ▼
-asyncio.Queue.put(task)
-        │
-        ▼
-CapturePipeline dequeues task
-        │
-        ├──► ImageRecorder / VideoRecorder → temp file
-        │
-        ├──► Enricher.enrich() (optional)
-        │       └──► labels, description, embedding
-        │
-        └──► SpectatorDB.insert() → stored + indexed
-```
-
-#### AI Enrichment
-
-Enrichment is **pluggable and disabled by default**.
-
-```python
-class Enricher(ABC):
-    def enrich(self, file: Path, media_type: MediaType) -> EnrichmentResult:
-        ...
-
 @dataclass
-class EnrichmentResult:
-    labels: list[str]
-    description: str | None
-    embedding: list[float] | None
+class MediaRecord:
+    media_type: MediaType            # IMAGE | VIDEO
+    captured_at: datetime            # tz-aware UTC; when the event happened
+    format: str                      # "jpg", "mp4", ...
+    size: int                        # bytes
+    id: str = <uuid4>
+    inserted_at: datetime | None = None   # tz-aware UTC; set by the store
+    duration: float | None = None         # seconds; video only
+    device_id: str | None = None
+    labels: list[str] = []
+    description: str | None = None
+    embedding: list[float] | None = None
+    embedding_model: str | None = None     # NEW — identity of the vector space
+    embedding_dim: int | None = None       # NEW — length; enforced on write
+    content_hash: str | None = None        # NEW (optional) — sha256 for dedup
 ```
 
-When enabled, enrichment runs **on-Pi** using a local model (e.g. CLIP for embeddings, a small VLM for descriptions). The `LocalEnricher` is a stub awaiting a chosen model backend.
+`embedding`, `embedding_model`, and `embedding_dim` are set together or all `None`. Similarity search compares only vectors sharing the same `embedding_model`.
 
-**Rationale:** The Pi may not have internet during operation. Keeping enrichment on-device ensures the system works air-gapped. The interface is deliberately decoupled from any specific model so the backend can be swapped without touching the pipeline.
+### Public API (curated, semver-protected)
 
-#### Service Layer
+```python
+from spectatordb import (
+    SpectatorDB, MediaRecord, MediaType,
+    Storage, LocalStorage, SaveMode,
+    MetadataStore, SQLiteMetadataStore,
+)
 
-`SpectatorService` is the single point of business logic shared between the REST and (future) MCP layers:
-
-| Method | Description |
-|---|---|
-| `query_media(...)` | Delegates to `SpectatorDB.query()` |
-| `get_record(id)` | Delegates to `SpectatorDB.get()` |
-| `retrieve_file(id)` | Copies media to a temp path for serving |
-| `device_status()` | Reads device stats via `iot-health` |
-| `capture_now()` | Requests an immediate capture from the camera monitor |
-
-#### REST API
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/` | Welcome message |
-| `GET` | `/health` | Device status (CPU, memory, temp, cameras) |
-| `GET` | `/media` | Query media records (filters: `media_type`, `device_id`, `limit`, `offset`) |
-| `GET` | `/media/{id}` | Get a single record's metadata |
-| `GET` | `/media/{id}/file` | Download the media file |
-| `POST` | `/capture` | Trigger an immediate capture |
-
-#### MCP Interface (future)
-
-MCP exposes the same operations as REST **except file download** (binary transfers are awkward in MCP). Claude on the user's laptop connects via MCP to perform natural language queries — for example, translating *"show me everyone who came to the door today"* into a structured `query_media()` call with `labels=["person"]` and an appropriate time range.
-
-**Rationale for separate protocols:** MCP and REST serve different clients (Claude vs. generic HTTP). They share the same `SpectatorService` layer — only the transport adapters differ.
-
-#### Configuration
-
-Configuration is a TOML file with Python dataclass defaults underneath:
-
-```toml
-[device]
-camera_index = 0
-device_id = "pi-01"
-
-[motion]
-sensitivity = 0.005   # fraction of changed pixels to trigger (0–1)
-
-[capture]
-mode = "image"        # "image" or "video"
-video_duration = 10.0 # seconds, for video mode
-
-[storage]
-media_dir = "./media"
-db_path = "./spectator.db"
-tmp_dir = "./tmp"
-
-[server]
-host = "0.0.0.0"
-port = 13722
-
-[enrichment]
-enabled = false
+SpectatorDB.insert(file, media_type, captured_at, *, duration=None, device_id=None,
+                   labels=None, description=None, embedding=None, embedding_model=None) -> str
+SpectatorDB.update_enrichment(id, *, labels=UNSET, description=UNSET,
+                              embedding=UNSET, embedding_model=UNSET) -> None   # NEW
+SpectatorDB.delete(id) -> None
+SpectatorDB.get(id) -> MediaRecord
+SpectatorDB.retrieve(id, dest) -> None
+SpectatorDB.query(*, start=None, end=None, media_type=None, device_id=None,
+                  labels=None, limit=None, offset=None) -> list[MediaRecord]
+SpectatorDB.search_similar(embedding, *, model, limit=None, threshold=None) -> list[MediaRecord]
+SpectatorDB.reconcile() -> ReconcileReport   # NEW — sweep orphan files / dangling rows
 ```
 
-**Rationale:** TOML is the deployment interface (human-editable, lives on the Pi). The Python API (`CollectorConfig(...)`) is for programmatic use and testing.
+### Design decisions
+
+- **(Decision) Semantic search: commit, but stage it.** Today `search_similar` raises `NotImplementedError`, so the library's defining feature is dead. Commit to it as core: implement a pure-Python brute-force cosine search in 0.1 (no dependencies; fine over a single device's own low-thousands of vectors), then add `sqlite-vec` as an optional `[vec]` extra in 0.2 for speed, behind the same API. Deferring it entirely would leave the library indistinguishable from files+SQLite.
+- **(Decision) Embeddings carry model identity + dimension.** Add `embedding_model` and `embedding_dim`; enforce that the three embedding fields move together and that all vectors for a model share a dimension; `search_similar` takes a required `model`. This must land before the search implementation, since it shapes the schema.
+- **(Decision) Store-first, enrich-later.** `MetadataStore` currently has no update path. Add `update_enrichment(...)` (partial update via an `UNSET` sentinel) so a capture can be stored immediately and enriched afterward. This is what lets the collector stop losing captures when enrichment is slow or fails (see the collector section).
+- **Atomic insert/delete + reconcile.** The facade currently does `storage.save()` then `metadata.insert()` with no spanning transaction, so partial failure orphans a file or leaves a dangling row. Define the invariant *"every metadata row has a backing file"*: write the file, then metadata; on metadata failure, delete the file (compensating action). On delete, remove metadata first, then file (tolerate a missing file). Crash-time orphans are swept by `reconcile()`. Optional `content_hash` enables idempotent re-ingest and dedup.
+- **Schema versioning + migrations.** Only `CREATE TABLE IF NOT EXISTS` exists today. Adopt `PRAGMA user_version` and a small ordered-migration runner; ship 0.1 as schema version 1 with the new columns present. Never break an existing database on upgrade. Put this in before the first release users can pin to.
+- **Curated public API + semver.** `__init__.py` is empty, forcing deep imports like `spectatordb.spectatordb.SpectatorDB`. Export the surface above from `spectatordb/__init__.py`, document it as the supported API, and adopt semantic versioning. (Also: the README's `insert` example is stale — it now requires `captured_at`.)
+- **Concurrency contract.** A single `sqlite3.Connection` (`check_same_thread=False`, WAL) is shared across collector executor threads and the REST + MCP servers. Given the low, motion-triggered write rate, keep one connection and serialize writes with a `threading.Lock` (WAL still allows concurrent reads); document the store as "thread-safe for the expected low-write workload, one instance per process." Revisit (connection-per-thread) only if write contention appears.
+- **UTC at the boundary.** `inserted_at` is UTC-aware but `captured_at` is stored as-passed (possibly naive), making ISO-string range queries fragile. Normalize `captured_at` to UTC on write and document that the API is UTC.
+
+### Roadmap
+
+- **0.1 — honest foundation:** embedding identity, `update_enrichment`, atomicity + `reconcile`, migrations (v1), curated API + semver, concurrency lock, UTC normalization, and pure-Python brute-force `search_similar`. Publish to PyPI.
+- **0.2 — acceleration & dedup:** `sqlite-vec` optional `[vec]` backend behind the same API; `content_hash` + idempotent re-ingest; a second `MetadataStore`/`Storage` implementation (even in-memory) to prove the ABCs aren't SQLite-shaped.
 
 ---
 
-## Key Design Decisions
+## Spectator-Data-Collector
 
-| Decision | Choice | Rationale |
-|---|---|---|
-| Deployment topology | Self-contained per Pi | Simplicity; no network dependency for capture |
-| Motion detection | OpenCV MOG2 (pure Python) | No external daemon; full control in-process |
-| Capture trigger | Motion-only (default) | Saves storage and CPU; on-demand via `capture_now()` |
-| Video recording | Fixed duration | Simple and predictable for V1; ongoing-motion recording is future |
-| AI query engine | Claude on user's laptop via MCP | Pi compute is limited; laptop may have internet for better models |
-| Enrichment | Pluggable, on-Pi, disabled by default | Air-gapped operation; optional enhancement |
-| Concurrency | Camera thread + asyncio event loop | Camera I/O is inherently blocking; asyncio fits the server model |
-| Storage abstraction | `Storage` + `MetadataStore` ABCs | File storage and metadata evolve independently; easy to swap backends |
-| Vector search | `sqlite-vec` (optional dep) | Works offline; optional so basic deployments stay lightweight |
+The on-device application that turns a camera into stored, queryable media.
 
----
+**Responsibilities.**
 
-## Future Considerations
+- Read frames from a camera, detect motion, and enqueue `CaptureTask`s.
+- Record image or short video to a temp file via the recorders.
+- Optionally enrich (labels, description, embedding) via a pluggable `Enricher` (ABC in `enrichment/base.py`; `LocalEnricher` is currently a stub awaiting a model).
+- Persist captures to `spectator-db`.
+- Expose `query / get / retrieve / device_status / capture_now` through `SpectatorService`, surfaced identically over REST (`rest.py`) and MCP (`mcp.py`).
+- Configure via TOML: device id, camera index, motion sensitivity, capture mode/duration, storage paths, server and MCP ports, enrichment on/off.
 
-- **Ongoing-motion video recording** — keep recording while motion continues, with a trailing window after it stops
-- **Hybrid search** — combine structured filters with vector similarity in a single `query()` call
-- **S3Storage / PostgresMetadataStore** — plug in to existing ABCs for cloud-backed deployments
-- **Central brain** — aggregate multiple Pi devices; out of scope for V1
-- **MCP server** — `mcp.py` stub planned; shares `SpectatorService` with REST
-- **LocalEnricher model backend** — integrate CLIP (embeddings) and a small VLM (descriptions) once target hardware is chosen
+**Key change — store-first, enrich-later.** The pipeline currently enriches *inline before insert*, so a slow model blocks every capture, and if `enrich()` throws, the pipeline's `except` block drops the capture entirely and the recorded media is unlinked and lost. Once `spectator-db` gains `update_enrichment` (see that section), change the pipeline to: record → `insert` immediately → enrich asynchronously → `update_enrichment`. Enrichment failure then degrades to "stored without labels," never data loss. Pair this with replacing the `LocalEnricher` stub with a real embedding model (e.g. a small CLIP) so 0.1 similarity search has vectors to search.
+
+**Out of scope (future, collector-side, never in `spectator-db`).** Device mesh / health gossip, leader election, multi-device coordination, S3 / central upload, and authentication on the REST/MCP endpoints.
+
+**Open questions.**
+
+1. Embedding model choice (drives `embedding_dim` and on-device cost): a CLIP variant for embeddings, and/or a small VLM for descriptions?
+2. Retention: does a device cap storage by age/size and evict (implying a `prune()` API and a role for `reconcile()`), or grow unbounded?
+3. Security boundary: REST/MCP currently bind `0.0.0.0` with open CORS — acceptable on a trusted LAN, but is that the stated assumption, or is auth required?
