@@ -1,0 +1,895 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="..">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>design - Spectator Design</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#iot-spectator-design" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Spectator Design" class="md-header__button md-logo" aria-label="Spectator Design" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Spectator Design
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              design
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Spectator Design" class="md-nav__button md-logo" aria-label="Spectator Design" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Spectator Design
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    design
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#iot-health" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IoT Health
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spectator-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spectator-DB
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spectator-data-collector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spectator-Data-Collector
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#iot-health_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IoT Health
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spectator-db_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spectator-DB
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spectator-DB">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#public-api-curated-semver-protected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Public API (curated, semver-protected)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#design-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design decisions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roadmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roadmap
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spectator-data-collector_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spectator-Data-Collector
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#goals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#iot-health" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IoT Health
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spectator-db" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spectator-DB
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#spectator-data-collector" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spectator-Data-Collector
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#iot-health_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IoT Health
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spectator-db_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spectator-DB
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Spectator-DB">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#public-api-curated-semver-protected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Public API (curated, semver-protected)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#design-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design decisions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#roadmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roadmap
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spectator-data-collector_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spectator-Data-Collector
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="iot-spectator-design">IoT Spectator — Design</h1>
+<p><strong>Status:</strong> Draft for review. Grounded in the code currently on <code>main</code> across <code>spectator-db</code>, <code>spectator-data-collector</code>, and <code>iot-health</code>. Items marked <strong>(Decision)</strong> need sign-off before implementation; the rest follow mechanically.</p>
+<hr />
+<h2 id="goals">Goals</h2>
+<p>Provide a simple, self-contained way to capture image/video on commodity IoT hardware (e.g. a Raspberry Pi) and make it queryable by time, by event, and by meaning, with optional AI enrichment.</p>
+<p>Guiding principles:</p>
+<ul>
+<li><strong>Per-device autonomy.</strong> Each device owns its data and works with no cloud, no network, and no AI model present. AI is an optional enhancement, never a dependency.</li>
+<li><strong>Building block over appliance.</strong> <code>spectator-db</code> is positioned as a reusable, dependency-light library. Its reason to exist over "files + SQLite" is the <em>union</em> neither vector databases nor object stores provide alone: it stores the media file <strong>and</strong> its structured metadata <strong>and</strong> its embedding behind one interface, offline, with no server to run. This deliberately avoids competing with full NVR appliances and instead serves builders who want an embeddable media-intelligence store.</li>
+<li><strong>Queryable, not just recorded.</strong> Temporal, event/label, and semantic similarity queries are first-class.</li>
+</ul>
+<p><strong>Non-goals:</strong> a central/multi-device database; a model host (the system stores enrichment, never generates it inside <code>spectator-db</code>); a continuous streaming/NVR product; an account or cloud service.</p>
+<hr />
+<h2 id="requirements">Requirements</h2>
+<p>System-wide requirements. Component-specific detail lives in the per-component sections below.</p>
+<p><strong>Functional</strong></p>
+<ul>
+<li>Capture image or short video on motion or on demand, and persist each capture with its metadata.</li>
+<li>Store, per capture: media type, capture time, format, size, optional duration, device id, labels, description, and an embedding (with the model identity that produced it).</li>
+<li>Query by composable filters: time range, media type, device id, labels (any-match), with limit/offset, newest-first.</li>
+<li>Similarity search over embeddings, scoped to a single embedding model.</li>
+<li>Attach or replace enrichment (labels, description, embedding) <em>after</em> the capture is stored.</li>
+<li>Expose query and control operations to local apps and to an assistant over the LAN (REST and MCP).</li>
+<li>Report device health.</li>
+</ul>
+<p><strong>Non-functional / constraints</strong></p>
+<ul>
+<li>Runs on a Raspberry Pi-class device; no GPU required.</li>
+<li><code>spectator-db</code> has zero required runtime dependencies; optional extras may accelerate features (e.g. vector search).</li>
+<li>Offline-first: full functionality with no network and no model.</li>
+<li>A failed or slow enricher must never cause a captured media item to be lost.</li>
+<li>Data owned on disk must survive library upgrades (schema versioning + forward migration).</li>
+<li>All datetimes are timezone-aware UTC at the API boundary.</li>
+<li>A documented concurrency contract for the storage layer.</li>
+</ul>
+<hr />
+<h2 id="architecture">Architecture</h2>
+<p>Each device runs one collector and one database, plus the health library. The collector is the active agent; the database is passive local memory; health reports vitals.</p>
+<p><img alt="IoT Spectator single-device architecture" src="architecture.svg" /></p>
+<p><strong>Layering and dependency direction.</strong> <code>spectator-db</code> depends on nothing else in the org. <code>spectator-data-collector</code> depends on both <code>spectator-db</code> and <code>iot-health</code>. The direction never reverses — the database stays ignorant of cameras, models, networks, and other devices.</p>
+<pre><code>iot-health  ◄───────────────┐  (vitals)
+                             │
+spectator-db  ◄─── spectator-data-collector
+(library, 0 deps)            (capture · enrich · REST · MCP)
+</code></pre>
+<p><strong>Architectural decisions (confirmed in code).</strong></p>
+<ul>
+<li><strong>(Decision, confirmed) <code>spectator-db</code> is a pure in-process library</strong>, zero runtime dependencies. The collector imports and calls it directly; there is no DB server or wire protocol.</li>
+<li><strong>(Decision, confirmed) The control plane lives in the collector</strong>, not the database. <code>rest.py</code> (FastAPI) and <code>mcp.py</code> (FastMCP) both delegate to a single <code>SpectatorService</code>, so REST and MCP can never diverge in behavior.</li>
+<li><strong>No central database.</strong> Devices are autonomous. Central upload (S3) and device-to-device coordination (mesh, leader election) are future, collector-side, and must never leak into <code>spectator-db</code>.</li>
+</ul>
+<h3 id="iot-health">IoT Health</h3>
+<p>Role: the device's vitals provider. <code>SpectatorService</code> calls it for the <code>device_status</code> operation surfaced over REST/MCP, and the collector can use it for self-monitoring. It is standalone and has no knowledge of capture or storage.</p>
+<h3 id="spectator-db">Spectator-DB</h3>
+<p>Role: the device's memory. It receives captures from the collector's pipeline (<code>store → enrich</code>), and answers queries for the service layer (<code>query / get / retrieve / search_similar</code>). It exposes two backend abstractions — <code>Storage</code> (file bytes) and <code>MetadataStore</code> (structured records) — orchestrated by the <code>SpectatorDB</code> facade. V1 backends are <code>LocalStorage</code> and <code>SQLiteMetadataStore</code>. It never captures and never runs a model.</p>
+<h3 id="spectator-data-collector">Spectator-Data-Collector</h3>
+<p>Role: the device's eyes and hands. A camera/motion thread enqueues capture tasks onto an <code>asyncio.Queue</code>; the <code>CapturePipeline</code> records each task, optionally enriches it, and stores it in <code>spectator-db</code>. The same <code>SpectatorService</code> that backs storage queries also triggers on-demand captures and reads device health, and is exposed identically over REST and MCP. Cross-device behavior and central upload are out of scope (see that section).</p>
+<hr />
+<h2 id="iot-health_1">IoT Health</h2>
+<p><strong>Responsibilities.</strong> Report platform, CPU architecture, OS, processors, memory, disk capacity, temperature, and cameras through a single <code>summary()</code>. Auto-detect the device class (Raspberry Pi vs. generic Linux/Jetson) behind a <code>BaseHealth</code> ABC.</p>
+<p><strong>Status &amp; notes.</strong> This is the most mature repo and works today. It uses an older style (classmethods, <code>Optional[...]</code>, 2020-era conventions). Treat modernization as opportunistic and low priority; no changes are required for the rest of the system to proceed.</p>
+<hr />
+<h2 id="spectator-db_1">Spectator-DB</h2>
+<p>The foundation, and where most open decisions live. Today the structure is in place — <code>Storage</code>/<code>MetadataStore</code> ABCs, a <code>MediaRecord</code> model, and a <code>SpectatorDB</code> facade with <code>insert / get / delete / retrieve / query / search_similar</code>. The decisions below close the gap between that structure and a stable, genuinely reusable 0.1.</p>
+<h3 id="data-model">Data model</h3>
+<pre><code class="language-python">@dataclass
+class MediaRecord:
+    media_type: MediaType            # IMAGE | VIDEO
+    captured_at: datetime            # tz-aware UTC; when the event happened
+    format: str                      # &quot;jpg&quot;, &quot;mp4&quot;, ...
+    size: int                        # bytes
+    id: str = &lt;uuid4&gt;
+    inserted_at: datetime | None = None   # tz-aware UTC; set by the store
+    duration: float | None = None         # seconds; video only
+    device_id: str | None = None
+    labels: list[str] = []
+    description: str | None = None
+    embedding: list[float] | None = None
+    embedding_model: str | None = None     # NEW — identity of the vector space
+    embedding_dim: int | None = None       # NEW — length; enforced on write
+    content_hash: str | None = None        # NEW (optional) — sha256 for dedup
+</code></pre>
+<p><code>embedding</code>, <code>embedding_model</code>, and <code>embedding_dim</code> are set together or all <code>None</code>. Similarity search compares only vectors sharing the same <code>embedding_model</code>.</p>
+<h3 id="public-api-curated-semver-protected">Public API (curated, semver-protected)</h3>
+<pre><code class="language-python">from spectatordb import (
+    SpectatorDB, MediaRecord, MediaType,
+    Storage, LocalStorage, SaveMode,
+    MetadataStore, SQLiteMetadataStore,
+)
+
+SpectatorDB.insert(file, media_type, captured_at, *, duration=None, device_id=None,
+                   labels=None, description=None, embedding=None, embedding_model=None) -&gt; str
+SpectatorDB.update_enrichment(id, *, labels=UNSET, description=UNSET,
+                              embedding=UNSET, embedding_model=UNSET) -&gt; None   # NEW
+SpectatorDB.delete(id) -&gt; None
+SpectatorDB.get(id) -&gt; MediaRecord
+SpectatorDB.retrieve(id, dest) -&gt; None
+SpectatorDB.query(*, start=None, end=None, media_type=None, device_id=None,
+                  labels=None, limit=None, offset=None) -&gt; list[MediaRecord]
+SpectatorDB.search_similar(embedding, *, model, limit=None, threshold=None) -&gt; list[MediaRecord]
+SpectatorDB.reconcile() -&gt; ReconcileReport   # NEW — sweep orphan files / dangling rows
+</code></pre>
+<h3 id="design-decisions">Design decisions</h3>
+<ul>
+<li><strong>(Decision) Semantic search: commit, but stage it.</strong> Today <code>search_similar</code> raises <code>NotImplementedError</code>, so the library's defining feature is dead. Commit to it as core: implement a pure-Python brute-force cosine search in 0.1 (no dependencies; fine over a single device's own low-thousands of vectors), then add <code>sqlite-vec</code> as an optional <code>[vec]</code> extra in 0.2 for speed, behind the same API. Deferring it entirely would leave the library indistinguishable from files+SQLite.</li>
+<li><strong>(Decision) Embeddings carry model identity + dimension.</strong> Add <code>embedding_model</code> and <code>embedding_dim</code>; enforce that the three embedding fields move together and that all vectors for a model share a dimension; <code>search_similar</code> takes a required <code>model</code>. This must land before the search implementation, since it shapes the schema.</li>
+<li><strong>(Decision) Store-first, enrich-later.</strong> <code>MetadataStore</code> currently has no update path. Add <code>update_enrichment(...)</code> (partial update via an <code>UNSET</code> sentinel) so a capture can be stored immediately and enriched afterward. This is what lets the collector stop losing captures when enrichment is slow or fails (see the collector section).</li>
+<li><strong>Atomic insert/delete + reconcile.</strong> The facade currently does <code>storage.save()</code> then <code>metadata.insert()</code> with no spanning transaction, so partial failure orphans a file or leaves a dangling row. Define the invariant <em>"every metadata row has a backing file"</em>: write the file, then metadata; on metadata failure, delete the file (compensating action). On delete, remove metadata first, then file (tolerate a missing file). Crash-time orphans are swept by <code>reconcile()</code>. Optional <code>content_hash</code> enables idempotent re-ingest and dedup.</li>
+<li><strong>Schema versioning + migrations.</strong> Only <code>CREATE TABLE IF NOT EXISTS</code> exists today. Adopt <code>PRAGMA user_version</code> and a small ordered-migration runner; ship 0.1 as schema version 1 with the new columns present. Never break an existing database on upgrade. Put this in before the first release users can pin to.</li>
+<li><strong>Curated public API + semver.</strong> <code>__init__.py</code> is empty, forcing deep imports like <code>spectatordb.spectatordb.SpectatorDB</code>. Export the surface above from <code>spectatordb/__init__.py</code>, document it as the supported API, and adopt semantic versioning. (Also: the README's <code>insert</code> example is stale — it now requires <code>captured_at</code>.)</li>
+<li><strong>Concurrency contract.</strong> A single <code>sqlite3.Connection</code> (<code>check_same_thread=False</code>, WAL) is shared across collector executor threads and the REST + MCP servers. Given the low, motion-triggered write rate, keep one connection and serialize writes with a <code>threading.Lock</code> (WAL still allows concurrent reads); document the store as "thread-safe for the expected low-write workload, one instance per process." Revisit (connection-per-thread) only if write contention appears.</li>
+<li><strong>UTC at the boundary.</strong> <code>inserted_at</code> is UTC-aware but <code>captured_at</code> is stored as-passed (possibly naive), making ISO-string range queries fragile. Normalize <code>captured_at</code> to UTC on write and document that the API is UTC.</li>
+</ul>
+<h3 id="roadmap">Roadmap</h3>
+<ul>
+<li><strong>0.1 — honest foundation:</strong> embedding identity, <code>update_enrichment</code>, atomicity + <code>reconcile</code>, migrations (v1), curated API + semver, concurrency lock, UTC normalization, and pure-Python brute-force <code>search_similar</code>. Publish to PyPI.</li>
+<li><strong>0.2 — acceleration &amp; dedup:</strong> <code>sqlite-vec</code> optional <code>[vec]</code> backend behind the same API; <code>content_hash</code> + idempotent re-ingest; a second <code>MetadataStore</code>/<code>Storage</code> implementation (even in-memory) to prove the ABCs aren't SQLite-shaped.</li>
+</ul>
+<hr />
+<h2 id="spectator-data-collector_1">Spectator-Data-Collector</h2>
+<p>The on-device application that turns a camera into stored, queryable media.</p>
+<p><strong>Responsibilities.</strong></p>
+<ul>
+<li>Read frames from a camera, detect motion, and enqueue <code>CaptureTask</code>s.</li>
+<li>Record image or short video to a temp file via the recorders.</li>
+<li>Optionally enrich (labels, description, embedding) via a pluggable <code>Enricher</code> (ABC in <code>enrichment/base.py</code>; <code>LocalEnricher</code> is currently a stub awaiting a model).</li>
+<li>Persist captures to <code>spectator-db</code>.</li>
+<li>Expose <code>query / get / retrieve / device_status / capture_now</code> through <code>SpectatorService</code>, surfaced identically over REST (<code>rest.py</code>) and MCP (<code>mcp.py</code>).</li>
+<li>Configure via TOML: device id, camera index, motion sensitivity, capture mode/duration, storage paths, server and MCP ports, enrichment on/off.</li>
+</ul>
+<p><strong>Key change — store-first, enrich-later.</strong> The pipeline currently enriches <em>inline before insert</em>, so a slow model blocks every capture, and if <code>enrich()</code> throws, the pipeline's <code>except</code> block drops the capture entirely and the recorded media is unlinked and lost. Once <code>spectator-db</code> gains <code>update_enrichment</code> (see that section), change the pipeline to: record → <code>insert</code> immediately → enrich asynchronously → <code>update_enrichment</code>. Enrichment failure then degrades to "stored without labels," never data loss. Pair this with replacing the <code>LocalEnricher</code> stub with a real embedding model (e.g. a small CLIP) so 0.1 similarity search has vectors to search.</p>
+<p><strong>Out of scope (future, collector-side, never in <code>spectator-db</code>).</strong> Device mesh / health gossip, leader election, multi-device coordination, S3 / central upload, and authentication on the REST/MCP endpoints.</p>
+<p><strong>Open questions.</strong></p>
+<ol>
+<li>Embedding model choice (drives <code>embedding_dim</code> and on-device cost): a CLIP variant for embeddings, and/or a small VLM for descriptions?</li>
+<li>Retention: does a device cap storage by age/size and evict (implying a <code>prune()</code> API and a role for <code>reconcile()</code>), or grow unbounded?</li>
+<li>Security boundary: REST/MCP currently bind <code>0.0.0.0</code> with open CORS — acceptable on a trusted LAN, but is that the stated assumption, or is auth required?</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

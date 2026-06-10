@@ -1,0 +1,85 @@
+<mxfile host="Electron">
+  <diagram name="IoT Spectator Architecture" id="iot-spectator-arch">
+    <mxGraphModel dx="2054" dy="1202" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="900" pageHeight="660" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="dev" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fbfcfe;strokeColor=#c2cbd6;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;fontColor=#7a8694;fontStyle=1;fontSize=12;" value="Single IoT Device  (e.g. Raspberry Pi)" vertex="1">
+          <mxGeometry height="420" width="630" x="30" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="cam" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Camera + Motion&#xa;camera/monitor.py · motion.py" vertex="1">
+          <mxGeometry height="54" width="160" x="50" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="queue" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="asyncio.Queue" vertex="1">
+          <mxGeometry height="38" width="160" x="50" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="pipe" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="CapturePipeline&#xa;capture/pipeline.py" vertex="1">
+          <mxGeometry height="54" width="160" x="50" y="265" as="geometry" />
+        </mxCell>
+        <mxCell id="enr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eaf2fc;strokeColor=#6c8ebf;dashed=1;" value="Enricher (optional)&#xa;enrichment/*" vertex="1">
+          <mxGeometry height="48" width="160" x="50" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="db" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="spectator-db&#xa;in-process library · 0 deps" vertex="1">
+          <mxGeometry height="66" width="170" x="265" y="265" as="geometry" />
+        </mxCell>
+        <mxCell id="health" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="iot-health&#xa;device vitals" vertex="1">
+          <mxGeometry height="48" width="170" x="265" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="rest" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="REST API&#xa;FastAPI" vertex="1">
+          <mxGeometry height="46" width="72" x="480" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="mcp" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="MCP server&#xa;FastMCP" vertex="1">
+          <mxGeometry height="46" width="72" x="558" y="174" as="geometry" />
+        </mxCell>
+        <mxCell id="svc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" value="SpectatorService&#xa;service.py" vertex="1">
+          <mxGeometry height="54" width="150" x="480" y="265" as="geometry" />
+        </mxCell>
+        <mxCell id="laptop" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#607d8b;" value="Claude / app&#xa;(laptop)" vertex="1">
+          <mxGeometry height="56" width="150" x="700" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f6f7;strokeColor=#9aa7b4;dashed=1;fontColor=#516170;" value="S3 / central store&#xa;(future)" vertex="1">
+          <mxGeometry height="46" width="150" x="720" y="269" as="geometry" />
+        </mxCell>
+        <mxCell id="others" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f4f6f7;strokeColor=#9aa7b4;dashed=1;fontColor=#516170;" value="Other devices&#xa;(future)" vertex="1">
+          <mxGeometry height="46" width="150" x="710" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="cam" style="endArrow=classic;html=1;strokeColor=#5f6b7a;" target="queue">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="queue" style="endArrow=classic;html=1;strokeColor=#5f6b7a;" target="pipe">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="enr" style="endArrow=classic;html=1;strokeColor=#5f6b7a;fontSize=10;fontColor=#5f6b7a;" target="pipe" value="labels / embedding">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="pipe" style="endArrow=classic;html=1;strokeColor=#5f6b7a;fontSize=10;fontColor=#5f6b7a;" target="db" value="store → update">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="svc" style="endArrow=classic;html=1;strokeColor=#5f6b7a;fontSize=10;fontColor=#5f6b7a;" target="db" value="query / get">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="svc" style="endArrow=classic;html=1;strokeColor=#5f6b7a;fontSize=10;fontColor=#5f6b7a;" target="health" value="vitals">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="rest" style="endArrow=classic;html=1;strokeColor=#5f6b7a;" target="svc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="mcp" style="endArrow=classic;html=1;strokeColor=#5f6b7a;" target="svc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="laptop" style="endArrow=classic;html=1;strokeColor=#5f6b7a;fontSize=10;fontColor=#5f6b7a;" target="mcp" value="MCP">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="laptop" style="endArrow=classic;html=1;strokeColor=#5f6b7a;fontSize=10;fontColor=#5f6b7a;" target="rest" value="HTTP / LAN">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="dev" style="endArrow=classic;html=1;dashed=1;strokeColor=#9aa7b4;fontSize=10;fontColor=#9aa7b4;fontStyle=2;" target="s3" value="upload">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="dev" style="endArrow=classic;startArrow=classic;html=1;dashed=1;strokeColor=#9aa7b4;fontSize=10;fontColor=#9aa7b4;fontStyle=2;" target="others" value="mesh">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
